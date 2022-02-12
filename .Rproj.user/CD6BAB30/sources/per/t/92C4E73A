@@ -1,0 +1,25 @@
+{
+    "id": "92C4E73A",
+    "path": null,
+    "project_path": null,
+    "type": "r_code_browser",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1644616342997.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "context": "package:base:::labels"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 2778717512808,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1644616342997,
+    "read_only": false,
+    "read_only_alternatives": []
+}

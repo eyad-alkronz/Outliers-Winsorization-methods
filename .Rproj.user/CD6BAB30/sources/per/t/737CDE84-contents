@@ -1,0 +1,199 @@
+---
+title: "Application Exponential Distribution"
+output: html_notebook
+---
+ 
+```{r}
+
+# sessions_data <- read.csv("sessions_data.csv" )
+
+```
+
+```{r error=FALSE , warning=FALSE,echo=FALSE}
+ library(tidyverse)  
+ library(lubridate)
+ library(plotly)
+ library(hrbrthemes)
+ 
+
+
+```
+
+```{r}
+getmode <- function(v) {
+  
+  x<-v
+  lim.inf=min(x)-1; lim.sup=max(x)+1
+  
+  # hist(x,freq=FALSE,breaks=seq(lim.inf,lim.sup,0.2))
+  s<-density(x,from=lim.inf,to=lim.sup,bw=0.2)
+  n<-length(s$y)
+  v1<-s$y[1:(n-2)];
+  v2<-s$y[2:(n-1)];
+  v3<-s$y[3:n]
+  ix<-1+which((v1<v2)&(v2>v3))
+  
+  #lines(s$x,s$y,col="red")
+  #points(s$x[ix],s$y[ix],col="blue")
+  
+  md <- s$x[which(s$y==max(s$y))] 
+  
+  md
+}
+
+```
+
+
+#Data Visualization
+
+```{r}
+userSessions <- sessions_data
+ p <-userSessions %>% filter(username ==103)%>%select(duration)  %>% ggplot(aes(duration)) + 
+   geom_histogram() 
+   ggplotly(p)
+   
+```
+
+for each user sessions-duration 
+1. Calculate p-value
+2. estimate rate parameter 
+
+```{r}
+# library(EnvStats)
+# library(exptest)
+# 
+# 
+# usersIds <- userSessions %>% group_by(username) %>%
+#   summarize(n = n()) %>% 
+#   filter(n>100) %>% select(username) %>% slice_head(n=4500)
+# 
+#    results = NULL
+#   
+# for(id in usersIds$username) {
+# 
+#     print(id)
+#     print(Sys.time())
+#      print("-------------")
+#   signleUserData <- userSessions %>% filter(username==id)%>%select(duration)
+#   
+#  
+# 
+#  data_with_contamination <-  signleUserData$duration
+#      
+#     #Code To Handling outlier 
+#     q1 <- quantile(data_with_contamination  , c(.25))[["25%"]]
+#     q3 <- quantile(data_with_contamination  , c(.75))[["75%"]]
+#     IQR <- q3-q1
+#     lower  = q1 - 1.5*IQR
+#     upper = q3 + 1.5*IQR
+#     
+#     
+#     outliers <- boxplot(data_with_contamination, plot=FALSE)$out
+#     outliersPos <- which(data_with_contamination %in% outliers)
+#     data_AfterDelete_Outliers <-  data_with_contamination[-outliersPos]
+#     
+#     outliersPro = length(outliers)/length(data_with_contamination)
+#     
+#     
+#     dataAfterHandling_Q_b_F_C <- data_with_contamination
+#     dataAfterHandling_mean <- data_with_contamination
+#     dataAfterHandling_median <- data_with_contamination
+#     dataAfterHandling_mode <- data_with_contamination
+#     
+#     
+#     dataAfterHandling_Q_b_F_C[dataAfterHandling_Q_b_F_C<lower] <-  (lower)
+#     dataAfterHandling_Q_b_F_C[dataAfterHandling_Q_b_F_C>upper] <-  (upper)
+#     estimated_rate_After_Q_b_F_C <- eexp(dataAfterHandling_Q_b_F_C, ci=TRUE, conf = 0.95)$parameters[["rate"]]
+#     
+#     
+#     mean = mean(data_AfterDelete_Outliers)
+#     dataAfterHandling_mean[outliersPos] <-  (mean)
+#     estimated_rate_After_mean <-  eexp(dataAfterHandling_mean, ci=TRUE, conf = 0.95)$parameters[["rate"]]
+#     
+#     
+#     median = median(data_AfterDelete_Outliers)
+#     dataAfterHandling_median[outliersPos] <-  (median)
+#     estimated_rate_After_median <-  eexp(dataAfterHandling_median, ci=TRUE, conf = 0.95)$parameters[["rate"]]
+#     
+#     
+#     # mode = getmode(data_AfterDelete_Outliers)
+#     # dataAfterHandling_mode[outliersPos] <-  (mode) 
+#     # estimated_rate_After_mode <- eexp(dataAfterHandling_mode, ci=TRUE, conf = 0.95)$parameters[["rate"]]
+#     
+#    estimated_rate_Before_Handling <- eexp(data_with_contamination, ci=TRUE, conf = 0.95)$parameters[["rate"]]
+#     # 
+#     
+#     Q_b_F_C_P_value <-shapiro.exp.test(dataAfterHandling_Q_b_F_C  )$p.value
+#     mean_P_value <-shapiro.exp.test(dataAfterHandling_mean )$p.value
+#     median_P_value <-shapiro.exp.test(dataAfterHandling_median )$p.value
+#     # mode_P_value <-shapiro.exp.test(dataAfterHandling_mode)$p.value
+#     Before_P_value <- shapiro.exp.test(data_with_contamination  )$p.value
+#       
+#        results = rbind(
+#       results,
+#       data.frame(
+#         id,
+#         outliersPro,
+#         estimated_rate_Before_Handling,
+#         estimated_rate_After_Q_b_F_C,
+#         estimated_rate_After_mean,
+#         estimated_rate_After_median,
+#        # estimated_rate_After_mode ,
+#         Before_P_value,
+#         Q_b_F_C_P_value,
+#         mean_P_value,
+#         median_P_value#,
+#         #mode_P_value
+#       ))
+#   }
+#   
+# ```
+# 
+# 
+# 
+# ```{r}
+# above_05 <- function(pValueList){
+#   percent <- mean(pValueList>.05)
+#   return (percent)
+# }
+
+```
+
+```{r}
+results <- read.csv("results.csv")
+```
+
+
+#Visualization Results 
+```{r}
+results %>%   select(estimated_rate_Before_Handling , 
+                     estimated_rate_After_Q_b_F_C , 
+                     estimated_rate_After_mean , 
+                     estimated_rate_After_median 
+                     ) %>% 
+  gather("Method" , "estimatedRate" , estimated_rate_Before_Handling , estimated_rate_After_Q_b_F_C , estimated_rate_After_mean ,estimated_rate_After_median  ) %>% 
+  ggplot(aes(x = (estimatedRate))) + 
+     geom_histogram( aes(colour = as.factor(Method))) + 
+
+  facet_wrap(.~Method)
+
+
+```
+
+
+```{r}
+
+results %>%   select(Before_P_value , 
+                     mean_P_value , 
+                     median_P_value , 
+                     Q_b_F_C_P_value 
+                     ) %>% 
+  gather("Method" , "pValue" , Before_P_value , mean_P_value , median_P_value ,Q_b_F_C_P_value  ) %>% 
+  ggplot(aes(x = (pValue))) + 
+     geom_histogram( ) + 
+ scale_x_continuous(breaks = c(0.05)) +
+
+  facet_wrap(.~Method)
+```
+
+

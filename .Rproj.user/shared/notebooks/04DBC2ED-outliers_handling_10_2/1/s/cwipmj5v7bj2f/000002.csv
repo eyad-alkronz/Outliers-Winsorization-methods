@@ -1,6 +1,0 @@
-"0",""
-"0",""
-"0","# different sample size with sd = 1 and contamination=5%"
-"0","data_20_1_5 <- read.csv( ""Normal_Data\\data_20_1_5.csv"" , header = TRUE)"
-"2","Error in file(file, ""rt"") : cannot open the connection
-"

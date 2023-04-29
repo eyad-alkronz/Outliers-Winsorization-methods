@@ -1,0 +1,176 @@
+---
+title: "tttt"
+author: "Iyad Alkrunz"
+date: "2/23/2022"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ 
+## Winsorization of outliers
+There are  two common methods for treating outliers in a data set. The first is to remove outliers as a means of trimming the data set. The second  method involves replacing the values of outliers with suitable statistic such as mean, median, mode or quantile-based technique as follows: 
+
+$1.\ Replace\ outliers\ by\ mean:$
+In this technique the outliers are replaced with the arthematic mean $\bar{x}=\sum_{i=1}^n \frac{x_i}{n}$ of the remaining observations after removing outliers. 
+
+$2.\ Replace\ outliers\ by\ median:$ 
+The median value that is the middle value in a ordered remaining observations 
+$$Q_2 =\bigg\{ \begin{aligned} 
+ &x_{\frac {n+1}{2}}  \,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\, \text{if $n$ is odd}  \nonumber\\   
+ &\big(x_{\frac {n}{2}} + x_{\frac {n}{2}+1} \big)/2 \,\,\,\,\,\,\,\,\,\,\, \text{if $n$ is even} \nonumber
+\end{aligned}$$
+
+is used to replace the detected outliers. 
+
+$3.\ Replace \ outliers  \ by \ mode:$
+The outliers are replaced with the mode value of the remaining observations, which is appears most often in a set of data values.
+
+$4.\ Quantile-based \ Flooring \ and \ Capping:$ 
+in this quantile-based technique, the maximum outliers are replaced with upper fence $U_F$ (capped), and the minimum outliers are replaced with lower fence $L_F$  (floored).
+
+
+The following section investigates the effect of the four considered winsorization statistics on the performance of parameter estimates for different probability distributions via Monte carlo simulation.
+
+
+
+# Simulation (Numerical Study)
+
+An R code has been developed and implemented in $R$ Studio environment to generate random data sets from three different probability distributions namely, normal, negative binomial and exponential distribution. 
+
+
+## Settings of Data Generation
+Data were generated with four different sample sizes, $n$ = 20,50,100 and 200, in such a way that ($1-\epsilon$) of data are generated from the original distribution ($P$) and the rest $\epsilon$ of data are generated from the contamination distribution ($Q$). Thus, the contaminated data structure can be formulated as $P_{\epsilon}=(1-\epsilon)P+\epsilon Q$, where $\epsilon$ is the contamination level and $\epsilon$ =0.05, 0.10 or 0.15.The following three probability distributions are considered:
+
+### Normal distribution
+For normal random variable, $X\sim N(\mu,\sigma^2)$; data were generated from the standard normal distribution with $\mu = 0$ and $\sigma = 1$. For contamination procedure; the contaminated data were generated from another normal distribution with $\mu = 4$ and $\sigma = 2$.  
+
+The maximum likelihood estimator ($MLE$) of the mean and standard deviation  are obtained as the sample mean $\hat{\mu}_{mle} = \bar{x} = \frac{1}{n} \sum_{i=1}^n x_i$,and  $\hat{\sigma} = \sqrt{\frac{\sum (x_{i} - \bar{x})^{2}}{n - 1}}$, respectively.
+
+### Negative binomial distribution
+Random variable $X$ follows the negative binomial distribution $X \sim NB(k,p)$ with mean $\mu =\frac{k}{p}$ and variance $\sigma^2= \frac{k(1-p)}{p^2}$ if $X$ is the count of independent Bernoulli trials required to achieve the $k^{th}$ successful trials when the probability of success is a constant $p$. The probability of $x=n$ trials is $f(X=n)= {n-1 \choose k-1} p^k (1-p)^{n-k}$.  The $MLE$ of $p$ is given by: $\hat{p} = \frac{k}{x + k}$.
+
+For negative binomial random variable; data are generated with parameters $k=2$ and $p=0.2$, while the contaminated data are generated from Poisson distribution with $\lambda = 32$, where the probability of $k$ successes is $P(X=k) = \frac {(e^{\lambda} \lambda^k)} {k!}$.
+ 
+
+### Exponential distribution
+The Exponential distribution is the most commonly used model in reliability and life-testing analysis, (i.e $f(x)=\theta e^{-\theta x}$ for $x \geq 0$). The $MLE$ of $\theta$ is given by $\hat{\theta}= \frac{1}{\bar{x}}$.  
+Data were generated with parameter $\theta = 0.5$, and the contaminated data were generated from exponential distribution with $\theta = 0.05$.  
+
+ 
+For each combination of the considered probability distributions,sample sizes, contamination levels and winsorization statistics; the generation procedures are repeated 1000 iterations to ensure the convergence.
+ 
+
+ 
+## Performance indicators 
+The impact of the considered four outliers winsorization statistics on the parameter estimates are measured by three common indicators as follows:
+
+1. $Bias$, is the difference between the estimator's expected value and the true value of the parameter being estimated.
+
+2. $Mean \ Square\ Error (MSE)$, is a measure of the quality of an estimator. As it is derived from the square of Euclidean distance, it is always a positive value that decreases as the error approaches zero.
+$MSE = \frac{1}{n} \sum_{i=1}^n (\beta - \hat{\beta})^2$ where $\beta$ and $\hat{\beta}$ are the true and estimated values of the considered parameters .
+
+3. $Goodness\ of\ fit\ tests$, are statistical tests aiming to determine whether a set of observed values match those expected under the applicable distribution. There are different goodness-of-fit tests, in this article the Shipiro-Wilk test is used in the case of normal and exponential distributions, while Kolmogorov-Smirnov test is used in the case of negative binomial distribution.
+
+
+```{r}
+library(robust)
+library(dplyr)
+library(ggplot2)
+library(MLmetrics )
+library(SimDesign)
+library(tidyr)
+library(stringr)
+
+```
+
+
+# Application
+
+Internet usage data set containing more than 2 million session records for 4500 random users are obtained for internet service provider company in Palestine through Ministry of Telecom and Information Technology of the State of Palestine. Each session has many features like start time, end time, traffic and duration. 
+
+In this study, we are interested only in sessions' duration which are commonly hypothesized to be exponentially distributed (see Akmeroth and Ammaram, 1996, Sripanidkulchai, et al, 2004, Chetlapalli, et al, 2020). Consonance with that, we assume that session duration are exponentially distributed, therefore, the sessions rows are aggregated for each user. A total of 1416 (31.467\%) of users sessions' duration have been fitted by exponential distribution at 0.05 level of significance according to Shapiro-Wilk goodness-of-fit test.
+
+The outlier of session duration for each user have been detected. Figure 2 presents the proportions of detected outliers for each user, it is ranged between 0\% and 30\% , with mean of 6\% and positively skewed distribution.
+
+
+```{r echo=FALSE ,warning=FALSE,error=FALSE  , message =FALSE , fig.width=5,fig.height=3}
+results <- read.csv("results.csv")
+
+
+plot <- results %>%   ggplot(aes(x = (outliersPro ))) +
+  geom_histogram(fill = "steelblue") +
+  xlab("Outliers proportion") + 
+  ylab("Count")+
+   theme_minimal()
+
+ gridExtra::grid.arrange( plot, bottom="Figure 2: Histogram of detected outliers proportion")
+
+ 
+```
+
+  
+
+Three winsorization methods are applied on users data with detected outliers, the summary of fitted users before and after winsorization is presented in Table 6. The results show that the proportion of fitted users data after winsorization are increase significantly, where the mean has the highest proportion, followed by median and then the qunatile-bases method which are consistent with the findings of the simulation study.
+The Chi-square test of independence shows that there are significant association between the status of users data (i.e fitted by exponential distribution) before and after winsorization at 0.05 level of significance,which reveal that insignificant number of the exponential fitted users data before winsorization has been alternated to be not fitted by exponential after winsorization has been conducted.
+
+
+
+
+
+```{r error=FALSE , warning=FALSE,echo=FALSE}
+
+ddd <-results %>%
+  mutate(fittedBefore = ifelse(Before_P_value > 0.05,TRUE,FALSE)) %>%
+  mutate(fittedAfterMean = ifelse(mean_P_value > 0.05,TRUE,FALSE))   %>%
+  mutate(fittedAfterMedian = ifelse(median_P_value > 0.05,TRUE,FALSE))  %>%
+  mutate(fittedAfterQ_b_F_C_P = ifelse(Q_b_F_C_P_value > 0.05,TRUE,FALSE))   
+
+
+r1 <- ddd %>% summarize(
+  fittedBefore = round(mean(fittedBefore),2),
+  fittedAfterMean = round(mean(fittedAfterMean),2),
+  fittedAfterMedian = round(mean(fittedAfterMedian),2),
+  fittedAfterQ_b_F_C_P = round(mean(fittedAfterQ_b_F_C_P),2),
+)
+
+
+
+meanResults <- chisq.test(table(ddd$fittedBefore, ddd$fittedAfterMean))
+ 
+medianResults <- chisq.test(table(ddd$fittedBefore, ddd$fittedAfterMedian))
+Q_b_F_C_PResults <- chisq.test(table(ddd$fittedBefore, ddd$fittedAfterQ_b_F_C_P))
+r1[nrow(r1) + 1,] = c("-" ,round(meanResults$statistic,2) ,round(medianResults$statistic,2) , round(Q_b_F_C_PResults$statistic,2) )
+#r1[nrow(r1) + 1,] = c("-" ,round(meanResults$p.value,3) ,round(medianResults$p.value,3) ,round( Q_b_F_C_PResults$p.value,3) )
+
+r1[nrow(r1) + 1,] = c("-" ,"0.00","0.00","0.00")
+r1 <- data.frame(statistics =c("Proportion of fit" , " Chi-square test" , "p-value" ), r1)
+
+
+# r1 %>%
+#   knitr::kable(
+#   caption = "Summary of fitted users data before and after winsorization by exponential distribution" ,
+#   col.names = c( "Statistics",  "Before"  , "Mean" , "Median" , "Quantile-based") , escape = FALSE ,
+#   digits = 3 , align = c("l","l" , "l","l","l" )
+#    )  %>%
+#   kableExtra:: kable_classic_2(
+#     full_width = F,
+#     position = "center" ,
+#     latex_options = "striped"
+#      )%>%
+#     kableExtra::  kable_styling(latex_options = c("HOLD_position"))  %>%
+#    kableExtra::add_header_above(c(" " = 1," " = 1, "After Outliers Winsorization" = 3))
+# 
+
+```
+
+ 
+
+
+
+
+
+

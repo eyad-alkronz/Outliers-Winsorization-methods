@@ -1,0 +1,633 @@
+---
+title: A comparative Study on Univariate Outliers Winsorization Methods in Data Science Context
+author:
+  - Ali Abuzaid^[Department of Mathematics, Al Azhar University - Gaza, a.abuzaid@alazhar.edu.ps]
+  - Eyad Alkronz^[Department of Information Technology , Al azhar University - Gaza, eyadalkronz@azhar.edu.ps]
+output:
+  pdf_document:
+    latex_engine: xelatex
+    number_sections: true
+  html_document:
+    df_print: paged
+    number_sections: true
+---
+ 
+```{r  echo=FALSE , warning=FALSE , error=FALSE ,include=FALSE}
+# library(robust)
+library(dplyr)
+library(ggplot2)
+# library(MLmetrics )
+library(SimDesign)
+library(tidyr)
+library(stringr)
+library(grid)
+
+
+```
+
+
+
+**Abstract**
+
+Outliers are values that differ significantly from the bulk of the data. The existence of outliers can distort estimates and drastically impair the performance and accuracy of a predictive model. Many statisticians and data scientists have been drawn to the topic of outlier detection. Outliers are dealt with one of three ways: accommodation, omission, or winsorization. 
+
+Practitioners and data scientists employ several winsorization statistics such as mean, median, mode and quantiles. This article investigates the influence of these four winsorization statistics on the estimations of parameters based on extensive simulation study.
+ 
+Three probability distributions are considered namely: normal, negative binomial, and exponential with different levels of contamination. Furthermore, bias, mean square error, and proportion of fitted winsorizated samples are obtained as indicators of performance.
+
+The simulation findings demonstrate that winsorizing outliers in symmetric distributions by any of the location parameters leads to a better estimate, however using the median outperforms other statistics in asymmetric distributions. Furthermore, as the contamination level is decreased or the sample size is increased, the estimations improve. 
+
+For illustration purposes, a real data of internet usage session duration for 4500 users with more than 2 million records are fitted for the exponential distribution and the detected outliers were winsorizated by the considered statistics. 
+
+
+
+
+**Keywords**
+Capping; flooring; outlier; quantile-based. 
+
+# Introduction
+
+Outliers are values in data that differ extremely from a major sample of the data, the presence of outliers can bias the estimates and, as a consequence, significantly reduce the performance and accuracy of a predictable model. 
+The problem of outlier-detection has attracted the attention of many statisticians and data scientists. 
+
+The methods of outlier-detection are broadly classified into different classes, namely distribution-based methods, depth-based methods, and density-based methods (Preparata and Shamos, 1988, Dominguesa, et al 2018).
+
+The argument on the handling of outliers is continued between the belief of Tukey (1959) that rejecting outliers indiscriminately is inappropriate, and other various trimming and winsorization techniques. Thus, after detection, outliers are handled in one of three ways: accommodation, omission, or winsorization.
+
+The accommodation is utilized by robust statistical methods in order to resist the effect of outliers on the parameter estimates (Ekezie & Ogu, 2013), which indirectly destroy the conclusions of the study (Hubert et al., 2008, Farcomeni & Ventura, 2010).
+Trimming of outliers has been well studied, where (Lix and Keselman, 1998; Yusof et al. 2013) have proved its beneficial in terms of robustness, while the type (symmetric or asymmetric) and percentage of trimming have been discussed by (Babu et al. 1999; Wilcox, 2003).
+
+In winsorization, the extreme values are replaced by other appropriate values to reduce the effect of the outliers on the estimation and modeling power (Frey, 2018). The choose of winsorization percentage cut-off point as well as the winsorization statistic are challenging. A poor choice of winsorization percentage will inflated the mean squared errors (MSE) of desired estimators. Thus, it is recommended to the choose cut-off point that minimizes the MSE compared to the classical estimator.
+
+In the context of data science, practitioners used different statistics for winsorization, such as mean, median and quantiles. 
+To the best of our knowledge, no study has been published dealing with the impact of different winsorization statistics on the estimators.
+This article investigates the impact of four winsorization statistics viz mean, median, mode and Quantile-based Flooring and Capping technique on the estimates of parameters of three distributions, namely normal, negative binomial and exponential distributions.
+
+The rest of this article is organized as follows: Section 2 reviews the source, impact, detection and winsorization of outlies. Section 3 investigates the impact of winsorization methods on the parameters estimates, and Section 4 illustrates the considered methods on real data. 
+
+
+# Outliers and Winsorization
+
+## Sources and Impact of Outliers
+
+Observed variables often contain outliers that differ extremely from a major sample of the data. Some data sets may come from homogeneous groups; others from heterogeneous groups that have different characteristics regarding a specific variable, Outliers can be caused by incorrect measurements, including data entry errors, or by sampling from a different population than the rest of the data (Frost, 2020).
+
+Outliers may cause a negative effect on data analyses such as biasing the estimation, reduce the predictability of constructed model, or it may provide useful information about data when we look into an unusual response to a given study. The data must be evaluated for the presence of outliers before beginning the procedure with the main bulk of data. Thus, outlier detection is an important part of data analysis in the above two cases.
+
+## Outliers Detection 
+
+There are different methods for identifying outliers, including square root transformation, median absolute deviation, Grubb's test, Ueda's method as explained recently by (Shimizu, 2022). In this article we are going to use Tukey's method boxplot (Tukey, 1977); due to its popularity and less sensitivity of outliers' existence compare to other tests.  
+
+Boxplot is a well-known simple graphical tool to display information about continuous univariate data based on five summaries, namely, median, lower quartile $Q_1$, upper quartile $Q_3$, lower extreme, and upper extreme of a data set. It is less sensitive to extreme values of the data than the previous methods using the sample mean and standard variance because it uses quartiles which are resistant to extreme values. The rule of the method is that any value smaller than the lower fence $L_F=Q_1 - \nu*IQR$ or larger than the upper fence $U_F=Q_3+ \nu*IQR$ is a possible outlier, where $\nu$ is the resistance factor and $IQR=Q_3 -Q_1$ is the interquartile range.. 
+
+Different values of $\nu$ can be considered, but the nominal value is $\nu=1.5$ (Hoaglin, et al, 1986). Various versions of the boxplot were also proposed (See Abuzaid et al; 2012, Saeger et al; 2016).
+
+ 
+The following subsection discusses the treatment of outliers via winsorization. 
+
+
+## Winsorization of outliers
+There are  two common methods for treating outliers in a data set. The first is to remove outliers as a means of trimming the data set. The second  method involves replacing the values of outliers with suitable statistic such as mean, median, mode or quantile-based technique as follows: 
+
+$1.\ Replace\ outliers\ by\ mean:$
+In this technique outliers are replaced with the arithmetic  mean $\bar{x}=\sum_{i=1}^n \frac{x_i}{n}$ of the remaining observations after removing outliers. 
+
+$2.\ Replace\ outliers\ by\ median:$ 
+The median value that is the middle value in an ordered remaining observations 
+$$Q_2 =\bigg\{ \begin{aligned} 
+ &x_{\frac {n+1}{2}}  \,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\,\, \text{if $n$ is odd}  \nonumber\\   
+ &\big(x_{\frac {n}{2}} + x_{\frac {n}{2}+1} \big)/2 \,\,\,\,\,\,\,\,\,\,\, \text{if $n$ is even} \nonumber
+\end{aligned}$$
+
+is used to replace the detected outliers. 
+
+$3.\ Replace \ outliers  \ by \ mode:$
+The outliers are replaced with the mode value of the remaining observations, which is appears most often in a set of data values.
+
+$4.\ Quantile-based \ Flooring \ and \ Capping:$ 
+in this quantile-based technique, the maximum outliers are replaced with upper fence $U_F$ (capped), and the minimum outliers are replaced with lower fence $L_F$  (floored).
+
+
+The following section investigates the effect of the four considered winsorization statistics on the performance of parameter estimates for different probability distributions via Monte carlo simulation.
+
+
+
+# Simulation (Numerical Study)
+
+An R code has been developed and implemented in $R$ Studio environment to generate random data sets from three different probability distributions namely, normal, negative binomial and exponential distribution. 
+
+
+## Settings of Data Generation
+Data were generated with four different sample sizes, $n$ = 20,50,100 and 200, in such a way that ($1-\epsilon$) of data are generated from the original distribution ($P$) and the rest $\epsilon$ of data are generated from the contamination distribution ($Q$). Thus, the contaminated data structure can be formulated as $P_{\epsilon}=(1-\epsilon)P+\epsilon Q$, where $\epsilon$ is the contamination level and $\epsilon$ =0.05, 0.10 or 0.15.The following three probability distributions are considered:
+
+### Normal distribution
+For normal random variable, $X\sim N(\mu,\sigma^2)$; data were generated from the standard normal distribution with $\mu = 0$ and $\sigma = 1$. For contamination procedure; the contaminated data were generated from another normal distribution with $\mu = 4$ and $\sigma = 2$.  
+
+The maximum likelihood estimator ($MLE$) of the mean and standard deviation  are obtained as the sample mean $\hat{\mu}_{mle} = \bar{x} = \frac{1}{n} \sum_{i=1}^n x_i$,and  $\hat{\sigma} = \sqrt{\frac{\sum (x_{i} - \bar{x})^{2}}{n - 1}}$, respectively.
+
+### Negative binomial distribution
+Random variable $X$ follows the negative binomial distribution $X \sim NB(k,p)$ with mean $\mu =\frac{k}{p}$ and variance $\sigma^2= \frac{k(1-p)}{p^2}$ if $X$ is the count of independent Bernoulli trials required to achieve the $k^{th}$ successful trials when the probability of success is a constant $p$. The probability of $x=n$ trials is $f(X=n)= {n-1 \choose k-1} p^k (1-p)^{n-k}$.  The $MLE$ of $p$ is given by: $\hat{p} = \frac{k}{x + k}$.
+
+For negative binomial random variable; data are generated with parameters $k=2$ and $p=0.2$, while the contaminated data are generated from Poisson distribution with $\lambda = 32$, where the probability of $k$ successes is $P(X=k) = \frac {(e^{-\lambda} \lambda^k)} {k!}$.
+ 
+
+### Exponential distribution
+The Exponential distribution is the most commonly used model in reliability and life-testing analysis, (i.e $f(x)=\theta e^{-\theta x}$ for $x \geq 0$). The $MLE$ of $\theta$ is given by $\hat{\theta}= \frac{1}{\bar{x}}$.  
+Data were generated with parameter $\theta = 0.5$, and the contaminated data were generated from exponential distribution with $\theta = 0.05$.  
+
+ 
+For each combination of the considered probability distributions,sample sizes, contamination levels and winsorization statistics; the generation procedures are repeated 1000 iterations to ensure the convergence.
+ 
+
+ 
+## Performance indicators 
+The impact of the considered four outliers winsorization statistics on the parameter estimates are assessed by three common indicators as follows:
+
+1. $Bias$, is the difference between the estimator's expected value and the true value of the parameter being estimated.
+
+2. $Mean \ Square\ Error (MSE)$, is a measure of the quality of an estimator. As it is derived from the square of Euclidean distance, it is always a positive value that decreases as the error approaches zero.
+$MSE = \frac{1}{n} \sum_{i=1}^n (\beta - \hat{\beta})^2$ where $\beta$ and $\hat{\beta}$ are the true and estimated values of the considered parameters .
+
+3. $Goodness\ of\ fit\ tests$, are statistical tests aiming to determine whether a set of observed values match those expected under the applicable distribution. There are different goodness-of-fit tests, in this article the Shipiro-Wilk test is used in the case of normal and exponential distributions, while Kolmogorov-Smirnov test is used in the case of negative binomial distribution.
+
+
+ 
+## Results
+
+Simulation results are summarized in Tables (1-5) and show that, regardless the distribution, contamination level or winsorization statistics, the results of simulation studies reveal that, the performance of parameter estimates are improved as the sample size increased, where the MSE has a decreasing function with the sample size, and the bias has a decreasing function of the sample size for $n$<100 and constant function for $n$>100, as partially presented in Figure 1.
+
+The performance has relatively an inverse relationship with the contamination level $\epsilon$.
+
+For normal distribution, due to its symmetric nature the mean, median and mode winsorization statistics have almost similar effect on the parameters estimates (i.e. $\mu$ and $\sigma^2$), while they outperform the quantile-based winsorization statistic as given in Tables (1-2).
+ 
+For negative binomial case, the mode winsorization statistic outperforms the other winsorization statistics for higher levels of contamination $\epsilon=0.15$, while the mean winsorization statistic performs better than other winsorization statistics for smaller levels of contamination $(\epsilon<0.15)$ as presented in Table 3.
+
+For the exponential distribution (Table 4), the mean winsorization statistic has the best performance followed by median, mode and then the quantile-based method. This behavior may be referred to the MLE estimator of the $\theta$, which is mainly the sample mean.
+
+
+```{r  echo=FALSE ,warning=FALSE,error=FALSE }
+
+finalResult_Normal <- read.csv("Normal_Data\\normalResult_28_4_2023.csv")
+finalResult_NB <- read.csv("NB_Data\\NB_Result_28_4_2023.csv")
+finalResult_EXP <- read.csv("Exp_Data\\EXP_Result_28_4_2023.csv")
+
+
+#merge three results 
+ 
+
+norm_data <- finalResult_Normal %>% select( sampleSize , contamination, MSE_XBar_Q_b_F_C , MSE_XBar_Mean , MSE_XBar_Median , MSE_XBar_Mode) %>% gather("Method" , "value" ,
+                       MSE_XBar_Q_b_F_C , MSE_XBar_Mean , MSE_XBar_Median , MSE_XBar_Mode )
+norm_data$label = "Normal Distribution MSE_XBar"
+
+norm_data2 <- finalResult_Normal %>% select( sampleSize , contamination, MSE_SD_Q_b_F_C , MSE_SD_Mean , MSE_SD_Median , MSE_SD_Mode) %>% gather("Method" , "value" ,
+                       MSE_SD_Q_b_F_C , MSE_SD_Mean , MSE_SD_Median , MSE_SD_Mode )
+norm_data2$label = "Normal Distribution MSE_SD"
+
+
+#################### NB #########################
+nb_data<- finalResult_NB %>% select( sampleSize , contamination,MSE_prop_Q_b_F_C  , MSE_prop_Mean, MSE_prop_Median , MSE_prop_Mode) %>% 
+  gather("Method" , "value" ,  MSE_prop_Q_b_F_C  , MSE_prop_Mean, MSE_prop_Median , MSE_prop_Mode )
+nb_data$label = "Negative binomial distribution MSE_prop"
+ 
+######################## EXP ############################
+ 
+
+exp_data <- finalResult_EXP %>% filter(rate==0.5)  %>% select( sampleSize , contamination,MSE_rate_Q_b_F_C  , MSE_rate_Mean, MSE_rate_Median , MSE_rate_Mode , MSE_rate_Before) %>% 
+  gather("Method" , "value" ,  MSE_rate_Q_b_F_C  , MSE_rate_Mean, MSE_rate_Median , MSE_rate_Mode ,MSE_rate_Before )
+exp_data$label = "Exponential distribution MSE_rate"
+
+
+
+ 
+ mergData <- norm_data%>%rbind(norm_data2) %>% rbind(exp_data) %>% rbind(nb_data)
+ 
+```
+
+ 
+
+ 
+```{r  echo=FALSE ,warning=FALSE,error=FALSE ,fig.height=4 }
+
+
+plot <- mergData %>% filter(contamination == 10) %>% 
+  filter(
+  (label == "Normal Distribution MSE_XBar" & Method=="MSE_XBar_Median") |
+  (label == "Normal Distribution MSE_SD" & Method=="MSE_SD_Mean") |
+  (label == "Negative binomial distribution MSE_prop" & Method=="MSE_prop_Mode") |
+  (label == "Exponential distribution MSE_rate" & Method=="MSE_rate_Q_b_F_C")   
+    ) %>%
+  
+ ggplot(aes(x = (sampleSize) , y = value)) + 
+  geom_point( aes(colour = as.factor(Method)   )) + 
+    geom_line( aes( colour =  as.factor(Method) )) +
+    labs( caption =  ""
+       ,subtitle =  "" ,  colour = ""  , shape =  "" )+
+   xlab("Sample size") + ylab("MSE") +
+  scale_colour_discrete(
+    labels = c( 
+     "MSE_prop_Mode" = expression(hat(p)*"  {Mode}")   , 
+     "MSE_rate_Q_b_F_C"=  expression(hat(theta)*"  {Qunatile}") ,
+     "MSE_SD_Mean" =  expression(hat(sigma)*"  {Mean}") ,
+     "MSE_XBar_Median" = expression(hat(mu)*"  {Median}")
+     )
+    )+ theme(legend.position = "top",
+          legend.direction = "horizontal")
+ 
+ 
+
+  gridExtra::grid.arrange( plot, bottom= textGrob("Figure 1: MSE of different parameter estimates after using winsorization methods \n in brackets  for different sample size" , gp=gpar(fontsize=10)))
+
+ 
+ 
+```
+
+ 
+
+
+
+From the prospective of goodness of fits test, as shown in Table 5, in the case of normal distribution, mean, median and mode winsorization statistics have consistent performance with respect to the contamination level and sample size, where the proportion of samples fitted by normal distribution close to 1 when the contamination level is $\epsilon=0.05$. 
+ In the case of an exponential distribution, all considered winsorization statistics perform approximately equally and perfectly, where the proportion of samples fitted by exponential distribution close to 1 regardless the sample size or contamination level.  
+The proportions of fitted samples by negative binomial are less than the other two distributions.
+The quantile-based winsorization statistic the worst performance compare to other three considered statistics because it accumulates the winsorizated values at the edges of distribution and malforms the nature of distribution.
+Thus, the mean winsorization statistic is recommended for most of the cases especially for smaller levels of contamination. 
+
+
+
+
+```{r echo=FALSE ,warning=FALSE,error=FALSE}
+megerTableMean <- finalResult_Normal  
+megerTableMean$bias_XBar_Q_b_F_C <-  round(megerTableMean$bias_XBar_Q_b_F_C ,3)
+megerTableMean$bias_XBar_Mean <-  round(megerTableMean$bias_XBar_Mean ,3)
+megerTableMean$bias_XBar_Median <-  round(megerTableMean$bias_XBar_Median ,3)
+megerTableMean$bias_XBar_Mode <-  round(megerTableMean$bias_XBar_Mode ,3)
+megerTableMean$MSE_XBar_Q_b_F_C <-  round(megerTableMean$MSE_XBar_Q_b_F_C ,3)
+megerTableMean$MSE_XBar_Mean <-  round(megerTableMean$MSE_XBar_Mean ,3)
+megerTableMean$MSE_XBar_Median <-  round(megerTableMean$MSE_XBar_Median ,3)
+megerTableMean$MSE_XBar_Mode <-  round(megerTableMean$MSE_XBar_Mode ,3)
+
+ 
+
+megerTableMean$Quantile_based <- str_c(megerTableMean$bias_XBar_Q_b_F_C , ' (' , megerTableMean$MSE_XBar_Q_b_F_C , ')' )
+megerTableMean$Mean <- str_c(megerTableMean$bias_XBar_Mean , ' (' , megerTableMean$MSE_XBar_Mean , ')' )
+megerTableMean$Median <- str_c(megerTableMean$bias_XBar_Median , ' (' , megerTableMean$MSE_XBar_Median , ')' )
+megerTableMean$Mode <- str_c(megerTableMean$bias_XBar_Mode , ' (' , megerTableMean$MSE_XBar_Mode , ')' )
+
+megerTableMean %>% select(sampleSize , contamination ,Quantile_based , Mean , Median ,Mode ) %>%
+knitr::kable(  
+  caption = "Bias (MSE) of the normal distribution's mean estimator for different winsorization methods" ,
+  col.names = c("n" ,  "$\\epsilon$" ,"Quantile-based", "Mean" , "Median" , "Mode") , escape = FALSE ,
+  digits = 3 , align = c("l","l" , "l","l","l","l") 
+  ,
+  )  %>%
+  kableExtra:: kable_classic_2(
+    full_width = F,
+    position = "center" , 
+    latex_options = "striped"
+    )%>%
+    kableExtra::  kable_styling(latex_options = c("HOLD_position")) %>% 
+  kableExtra::add_header_above(c(" " = 2, "Winsorization Methods" = 4))
+
+
+
+
+```
+
+
+
+```{r echo=FALSE ,warning=FALSE,error=FALSE  }
+megerTableSD <- finalResult_Normal  
+megerTableSD$bias_SD_Q_b_F_C <-  round(megerTableSD$bias_SD_Q_b_F_C ,3)
+megerTableSD$bias_SD_Mean <-  round(megerTableSD$bias_SD_Mean ,3)
+megerTableSD$bias_SD_Median <-  round(megerTableSD$bias_SD_Median ,3)
+megerTableSD$bias_SD_Mode <-  round(megerTableSD$bias_SD_Mode ,3)
+
+megerTableSD$MSE_SD_Q_b_F_C <-  round(megerTableSD$MSE_SD_Q_b_F_C ,3)
+megerTableSD$MSE_SD_Mean <-  round(megerTableSD$MSE_SD_Mean ,3)
+megerTableSD$MSE_SD_Median <-  round(megerTableSD$MSE_SD_Median ,3)
+megerTableSD$MSE_SD_Mode <-  round(megerTableSD$MSE_SD_Mode ,3)
+
+
+
+megerTableSD$Quantile_based <- str_c(megerTableSD$bias_SD_Q_b_F_C , ' (' , megerTableSD$MSE_SD_Q_b_F_C , ')' )
+megerTableSD$Mean <- str_c(megerTableSD$bias_SD_Mean , ' (' , megerTableSD$MSE_SD_Mean , ')' )
+megerTableSD$Median <- str_c(megerTableSD$bias_SD_Median , ' (' , megerTableSD$MSE_SD_Median , ')' )
+megerTableSD$Mode <- str_c(megerTableSD$bias_SD_Mode , ' (' , megerTableSD$MSE_SD_Mode , ')' )
+
+
+ megerTableSD %>% select(sampleSize , contamination ,Quantile_based , Mean , Median ,Mode ) %>%
+knitr::kable(  
+  caption = "Bias (MSE) of the normal distribution's standared deviation estimator for different winsorization methods" ,
+  col.names = c("n" ,  "$\\epsilon$" ,"Quantile-based", "Mean" , "Median" , "Mode") , escape = FALSE ,
+  digits = 3 , align = c("l","l" , "l","l","l","l") 
+  ,
+  )  %>%
+  kableExtra:: kable_classic_2(
+    full_width = F,
+    position = "center" , 
+    latex_options = "striped"
+    )%>%
+    kableExtra::  kable_styling(latex_options = c("HOLD_position")) %>% 
+  kableExtra::add_header_above(c(" " = 2, "Winsorization  Methods" = 4))
+
+
+```
+ 
+
+
+
+
+```{r  echo=FALSE ,warning=FALSE,error=FALSE}
+
+megerTableProp <- finalResult_NB  
+megerTableProp$bias_prop_Q_b_F_C <-  round(megerTableProp$bias_prop_Q_b_F_C ,3)
+megerTableProp$bias_prop_Mean <-  round(megerTableProp$bias_prop_Mean ,3)
+megerTableProp$bias_prop_Median <-  round(megerTableProp$bias_prop_Median ,3)
+megerTableProp$bias_prop_Mode <-  round(megerTableProp$bias_prop_Mode ,3)
+
+megerTableProp$MSE_prop_Q_b_F_C <-  round(megerTableProp$MSE_prop_Q_b_F_C ,3)
+megerTableProp$MSE_prop_Mean <-  round(megerTableProp$MSE_prop_Mean ,3)
+megerTableProp$MSE_prop_Median <-  round(megerTableProp$MSE_prop_Median ,3)
+megerTableProp$MSE_prop_Mode <-  round(megerTableProp$MSE_prop_Mode ,3)
+
+# change all zero to 0.000
+megerTableProp <- megerTableProp %>%
+  mutate(
+    bias_prop_Q_b_F_C = case_when(  bias_prop_Q_b_F_C == 0 ~ "0.000" ,  TRUE ~ as.character(bias_prop_Q_b_F_C)) , 
+    bias_prop_Mean = case_when(  bias_prop_Mean == 0 ~ "0.000" ,  TRUE ~ as.character(bias_prop_Mean)) , 
+    bias_prop_Median = case_when(  bias_prop_Median == 0 ~ "0.000" ,  TRUE ~ as.character(bias_prop_Median)) , 
+    bias_prop_Mode = case_when(  bias_prop_Mode == 0 ~ "0.000" ,  TRUE ~ as.character(bias_prop_Mode)) , 
+
+    
+    
+    MSE_prop_Q_b_F_C = case_when(  MSE_prop_Q_b_F_C == 0 ~ "0.000" ,  TRUE ~ as.character(MSE_prop_Q_b_F_C)) , 
+    MSE_prop_Mean = case_when(  MSE_prop_Mean == 0 ~ "0.000" ,  TRUE ~ as.character(MSE_prop_Mean)) , 
+    MSE_prop_Median = case_when(  MSE_prop_Median == 0 ~ "0.000" ,  TRUE ~ as.character(MSE_prop_Median)) , 
+    MSE_prop_Mode = case_when(  MSE_prop_Mode == 0 ~ "0.000" ,  TRUE ~ as.character(MSE_prop_Mode)) , 
+    )
+ 
+megerTableProp$Quantile_based <- str_c(megerTableProp$bias_prop_Q_b_F_C , ' (' , megerTableProp$MSE_prop_Q_b_F_C , ')' )
+megerTableProp$Mean <- str_c(megerTableProp$bias_prop_Mean , ' (' , megerTableProp$MSE_prop_Mean , ')' )
+megerTableProp$Median <- str_c(megerTableProp$bias_prop_Median , ' (' , megerTableProp$MSE_prop_Median , ')' )
+megerTableProp$Mode <- str_c(megerTableProp$bias_prop_Mode , ' (' , megerTableProp$MSE_prop_Mode , ')' )
+
+
+megerTableProp %>% select(sampleSize , contamination ,Quantile_based , Mean , Median ,Mode ) %>%
+knitr::kable(  
+  caption = "Bias (MSE) of the negative binomial distribution probability of success estimator for different winsorization methods" ,
+  col.names = c("n" ,  "$\\epsilon$" ,"Quantile-based", "Mean" , "Median" , "Mode") , escape = FALSE ,
+  digits = 3 , align = c("l","l" , "l","l","l","l") 
+  ,
+  )  %>%
+  kableExtra:: kable_classic_2(
+    full_width = F,
+    position = "center" , 
+    latex_options = "striped"
+    )%>%
+    kableExtra::  kable_styling(latex_options = c("HOLD_position")) %>% 
+  kableExtra::add_header_above(c(" " = 2, "Winsorization methods" = 4))
+
+
+
+```
+
+
+
+
+
+```{r  echo=FALSE ,warning=FALSE,error=FALSE}
+
+megerTableRate <- finalResult_EXP  
+megerTableRate$bias_rate_Before <-  round(megerTableRate$bias_rate_Before ,3)
+megerTableRate$bias_rate_Q_b_F_C <-  round(megerTableRate$bias_rate_Q_b_F_C ,3)
+megerTableRate$bias_rate_Mean <-  round(megerTableRate$bias_rate_Mean ,3)
+megerTableRate$bias_rate_Median <-  round(megerTableRate$bias_rate_Median ,3)
+megerTableRate$bias_rate_Mode <-  round(megerTableRate$bias_rate_Mode ,3)
+
+megerTableRate$MSE_rate_Before <-  round(megerTableRate$MSE_rate_Before ,3)
+megerTableRate$MSE_rate_Q_b_F_C <-  round(megerTableRate$MSE_rate_Q_b_F_C ,3)
+megerTableRate$MSE_rate_Mean <-  round(megerTableRate$MSE_rate_Mean ,3)
+megerTableRate$MSE_rate_Median <-  round(megerTableRate$MSE_rate_Median ,3)
+megerTableRate$MSE_rate_Mode <-  round(megerTableRate$MSE_rate_Mode ,3)
+
+ 
+megerTableRate$Before <- str_c(megerTableRate$bias_rate_Before , ' (' , megerTableRate$MSE_rate_Before , ')' )
+megerTableRate$Quantile_based <- str_c(megerTableRate$bias_rate_Q_b_F_C , ' (' , megerTableRate$MSE_rate_Q_b_F_C , ')' )
+megerTableRate$Mean <- str_c(megerTableRate$bias_rate_Mean , ' (' , megerTableRate$MSE_rate_Mean , ')' )
+megerTableRate$Median <- str_c(megerTableRate$bias_rate_Median , ' (' , megerTableRate$MSE_rate_Median , ')' )
+megerTableRate$Mode <- str_c(megerTableRate$bias_rate_Mode  , ' (' , megerTableRate$MSE_rate_Mode , ')' )
+
+
+megerTableRate %>% select(sampleSize , contamination ,Before ,Quantile_based , Mean , Median ,Mode ) %>%
+knitr::kable(  
+  caption = "Bias (MSE) of the exponential distribution's rate estimator for different winsorization methods" ,
+  col.names = c("n" ,  "$\\epsilon$" ,"Before","Quantile-based", "Mean" , "Median" , "Mode") , escape = FALSE ,
+  digits = 3 , align = c("l","l" , "l","l","l","l") 
+  ,
+  )  %>%
+  kableExtra:: kable_classic_2(
+    full_width = F,
+    position = "center" , 
+    latex_options = "striped"
+    )%>%
+    kableExtra::  kable_styling(latex_options = c("HOLD_position")) %>% 
+  kableExtra::add_header_above(c(" " = 3, "Winsorization Methods" = 4))
+
+
+
+```
+
+```{r echo=FALSE ,warning=FALSE,error=FALSE  }
+newPvalueTable <-  
+  
+  finalResult_Normal %>% select(
+    Normal_sampleSize =sampleSize ,
+    Normal_contamination= contamination ,
+    Normal_above05_Q_b_F_C=above05_Q_b_F_C  ,
+    Normal_above05_Mean=above05_Mean , 
+    Normal_above05_Median=above05_Median ,
+    Normal_above05_Mode=above05_Mode) %>% cbind(
+
+finalResult_EXP %>% select(
+  # EXP_sampleSize =sampleSize, 
+  # EXP_contamination =contamination,
+  EXP_above05_Q_b_F_C  =above05_Q_b_F_C,
+  EXP_above05_Mean =above05_Mean,
+  EXP_above05_Median =above05_Median, 
+  EXP_above05_Mode=above05_Mode) %>% cbind(
+
+finalResult_NB %>% select(
+  # NB_sampleSize = sampleSize ,
+  #                         NB_contamination =contamination ,
+                          NB_above05_Q_b_F_C =above05_Q_b_F_C ,
+                          NB_above05_Mean = above05_Mean ,
+                          NB_above05_Median  =above05_Median, 
+                          NB_above05_Mode = above05_Mode)))
+
+
+ 
+ knitr::kable(newPvalueTable ,
+caption = "The proportion of fitted samples by associated distributions at 0.05 level of significance after winsorizing outliers." ,
+col.names = c("n" ,  "$\\epsilon$" ,
+              "Qun", "Mean" , "Med" , "Mode" , 
+              "Qun", "Mean" , "Med" , "Mode" , 
+              "Qun", "Mean" , "Med" , "Mode"
+              ) , escape = FALSE ,
+  digits = 3 , align = c("l","l" , "c","c","c","c") 
+  ,
+  )  %>%
+  kableExtra:: kable_classic_2(
+    full_width = F,
+    position = "center" , 
+    latex_options = "striped"
+    )%>%
+    kableExtra::  kable_styling(latex_options = c("HOLD_position")) %>% 
+  kableExtra::add_header_above(c("Distribution" = 2, "Normal distribution" = 4 ,
+                                 "Exponential distribution" = 4 , "Negative binomial distribution" = 4))
+ 
+
+ 
+
+```
+
+ 
+# Application
+
+Internet usage data set containing more than 2 million session records for 4500 random users are obtained for internet service provider company in Palestine through the Ministry of Telecom and Information Technology of the State of Palestine. Each session has many features like start time, end time, traffic and duration. 
+
+In this study, we are interested only in sessions' duration which are commonly hypothesized to be exponentially distributed (see Almeroth and Ammaram, 1996, Sripanidkulchai, et al, 2004, Chetlapalli, et al, 2020). Consonance with that, we assume that session duration are exponentially distributed, therefore, the sessions rows are aggregated for each user. A total of 1416 (31.467\%) of users sessions' duration have been fitted by exponential distribution at 0.05 level of significance according to Shapiro-Wilk goodness-of-fit test.
+
+The outlier of session duration for each user have been detected. Figure 2 presents the proportions of detected outliers for each user, it is ranged between 0\% and 30\% , with mean of 6\% and positively skewed distribution.
+
+
+```{r echo=FALSE ,warning=FALSE,error=FALSE  , message =FALSE , fig.width=5,fig.height=3}
+results <- read.csv("results.csv")
+
+
+plot <- results %>%   ggplot(aes(x = (outliersPro ))) +
+  geom_histogram(fill = "steelblue") +
+  xlab("Outliers proportion") + 
+  ylab("Count")+
+   theme_minimal()
+
+# gridExtra::grid.arrange( plot, bottom="Figure 2: Histogram of detected outliers proportion")
+
+gridExtra::grid.arrange( plot, bottom= textGrob("Figure 2: Histogram of detected outliers proportion", gp=gpar(fontsize=10)))
+
+ 
+```
+
+  
+
+Three winsorization methods are applied on users data with detected outliers, the summary of fitted users before and after winsorization is presented in Table 6. The results show that the proportion of fitted users data after winsorization are increased significantly, where the mean has the highest proportion, followed by median and then the quantile-bases method which are consistent with the findings of the simulation study.
+The Chi-square test of independence shows that there are significant association between the status of users data (i.e fitted by exponential distribution) before and after winsorization at 0.05 level of significance,which reveal that insignificant number of the exponential fitted users data before winsorization has been alternated to be not fitted by exponential after winsorization has been conducted.
+
+
+
+
+
+```{r error=FALSE , warning=FALSE,echo=FALSE}
+
+ddd <-results %>%
+  mutate(fittedBefore = ifelse(Before_P_value > 0.05,TRUE,FALSE)) %>%
+  mutate(fittedAfterMean = ifelse(mean_P_value > 0.05,TRUE,FALSE))   %>%
+  mutate(fittedAfterMedian = ifelse(median_P_value > 0.05,TRUE,FALSE))  %>%
+  mutate(fittedAfterQ_b_F_C_P = ifelse(Q_b_F_C_P_value > 0.05,TRUE,FALSE))   
+
+
+r1 <- ddd %>% summarize(
+  fittedBefore = round(mean(fittedBefore),2),
+  fittedAfterMean = round(mean(fittedAfterMean),2),
+  fittedAfterMedian = round(mean(fittedAfterMedian),2),
+  fittedAfterQ_b_F_C_P = round(mean(fittedAfterQ_b_F_C_P),2),
+)
+
+
+
+meanResults <- chisq.test(table(ddd$fittedBefore, ddd$fittedAfterMean))
+ 
+medianResults <- chisq.test(table(ddd$fittedBefore, ddd$fittedAfterMedian))
+Q_b_F_C_PResults <- chisq.test(table(ddd$fittedBefore, ddd$fittedAfterQ_b_F_C_P))
+r1[nrow(r1) + 1,] = c("-" ,round(meanResults$statistic,2) ,round(medianResults$statistic,2) , round(Q_b_F_C_PResults$statistic,2) )
+#r1[nrow(r1) + 1,] = c("-" ,round(meanResults$p.value,3) ,round(medianResults$p.value,3) ,round( Q_b_F_C_PResults$p.value,3) )
+
+r1[nrow(r1) + 1,] = c("-" ,"0.00","0.00","0.00")
+r1 <- data.frame(statistics =c("Proportion of fitted data" , " Chi-square test" , "p-value" ), r1)
+
+
+r1 %>%
+  knitr::kable(
+  caption = "Summary of fitted users data before and after winsorization by exponential distribution" ,
+  col.names = c( "Statistics",  "Before"  , "Mean" , "Median" , "Quantile-based") , escape = FALSE ,
+  digits = 3 , align = c("l","l" , "l","l","l" )
+   )  %>%
+  kableExtra:: kable_classic_2(
+    full_width = F,
+    position = "center" ,
+    latex_options = "striped"
+     )%>%
+    kableExtra::  kable_styling(latex_options = c("HOLD_position"))  %>%
+   kableExtra::add_header_above(c(" " = 1," " = 1, "After Outliers Winsorization" = 3))
+
+
+```
+
+ 
+
+
+
+
+
+
+# Conclusions
+
+Outliers are more likely to exist as the data are generated from a variety of phenomena and activities with varying characteristics and dimensions. As a result, detecting and dealing with it will be a constant problem. Therefore, its detection and handling will be an ongoing challenge.
+
+This article addressed what seems to be a plain winsorization techniques to handle outliers via simulation study. The findings reveal that the nature of treated data including its distribution, sample size, percentage of outliers are vital factors in this process output. 
+
+Because of its popularity and simplicity, we have used Tukey's method , however it is expected that other outlier identification methods would find different outliers. As a result, other outliers identification procedures should be utilized to winsorizate the common identified outliers.
+
+
+\pagebreak
+
+**REFERENCES**
+
+Abuzaid AH, Mohamed IB and Hussin AG (2012). Boxplot for Circular Variables. Computational Statistics. 27 (3), 381-392. 
+
+Almeroth KC and Ammarm MH (1996). Collecting and Modeling the Join/Leave Behavior of Multicast Group Members in the MBone. In Proceedings of International Symposium on High Performance Distributed Computing (HPDC).
+
+Babu GJ, Padmanabhan AR, and Puri ML (1999). Robust One-way ANOVA under Possibly Non Regular Conditions. Biometrical Journal, 41: 321-339.
+
+Chetlapalli V, Iyer KSS and Agrawal H (2020) Modelling time-dependent aggregate traffic in 5G networks. Telecommun Syst 73, 557-575. https://doi.org/10.1007/s11235-019-00629-w
+
+Dominguesa R, Filipponea M, Michiardia P and Zouaouib J. (2018) A Comparative Evaluation of Outlier Detection Algorithms: Experiments and Analyses, Pattern Recogn.74: 406-421. 
+
+Ekezie DD and Ogu AI (2013) Statistical Analysis/Methods of Detecting Outliers in Univariate Data in A Regression Analysis Model. International Journal of Education and Research, 1(5): 1-24.
+
+Frey B (2018). The SAGE encyclopedia of educational research, measurement, and evaluation (Vols. 1-4). Thousand Oaks,, CA: SAGE Publications, Inc. doi: 10.4135/9781506326139
+
+Frost J (2020). Hypothesis testing: An intuitive guide for making data drives decisions. Statistics by Jim Publishing State College, Pennysalvia, U.S.A.
+
+Hoaglin DC, Iglewicz B, Tukey JW (1986) Performance of some resistant rules for outlier labeling. J Am Stat Assoc 81(396):991-999
+
+
+Hubert M, Rousseeuw PJ, and Van Aelst S (2008). High-breakdown Robust Multivariate Methods. Statistical Science, 23(1): 92-119.
+
+Lix LM and Keselman HJ (1998). To Trim or Not to Trim: Tests of Location Equality under Heteroscedasticity and Non-normality. Educational and Psychological Measurement, 115: 335-363.
+
+Preparata F, Shamos M (1988) Computational Geometry: an Introduction, Springer-Verlag, Berlin.
+
+Saeger T, Kleven B, Otero I, Wallace M and Ziglar R(2016) Outlier Labeling Method for Univariate Data for Module Test and Die Sort. IEEE transactions on semiconductor manufacturing, 29 (4): 330-335.
+
+
+Shimizu Y (2022) Multiple Desirable Methods in Outlier Detection of Univariate Data With R Source Codes. Front. Psychol. 12:819854.
+
+Sripanidkulchai K, Maggs B, and Zhang H. (2004). An analysis of live streaming workloads on the internet. In Proceedings of the 4th ACM SIGCOMM conference on Internet measurement (IMC '04). Association for Computing Machinery, New York, NY, USA, 41-54. DOI:https://doi.org/10.1145/1028788.1028795
+
+Tukey JW (1977) Exploratory data analysis. Addison-Wesley, Reading.
+
+Tukey JW (1959). A survey of sampling from contaminated distributions. Princeton, New Jersey: Princeton University.
+
+Wilcox RR (2003). Applying Contemporary Statistical Techniques. Academic Press: San Diego, CA. 
+
+Yusof ZM, Othman AR, and Syed Yahaya SS (2013). Robustness of Trimmed F Statistics when Handling Nonnormal Data. Malaysian Journal of Science, 32(1): 73-77.
+
